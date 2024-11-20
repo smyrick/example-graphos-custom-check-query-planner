@@ -1,6 +1,8 @@
-# Node.js Hello World
+# GraphOS Webhook Listener
 
-Simple Node.js + Vercel example that returns a "Hello World" response.
+Example code that listens to a GraphOS webhook notification
+
+The code in this repository is experimental and has been provided for reference purposes only. Community feedback is welcome but this project may not be supported in the same way that repositories in the official Apollo GraphQL GitHub organization are. If you need help you can file an issue on this repository, contact Apollo to talk to an expert, or create a ticket directly in Apollo Studio.
 
 ## How to Use
 
@@ -21,11 +23,10 @@ git clone https://github.com/vercel/examples/tree/main/solutions/node-hello-worl
 Install the Vercel CLI:
 
 ```bash
-npm i -g vercel
+npm run vercel
 ```
 
-Then run the app at the root of the repository:
+## Endpoints
 
-```bash
-vercel dev
-```
+- `/api/hello` Simple test endpoint that returns a hello world message
+- `/api/webhook` Example Webhook that understands [GraphOS Notifications](https://www.apollographql.com/docs/graphos/platform/insights/notifications/schema-changes)
