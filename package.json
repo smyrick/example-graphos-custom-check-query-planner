@@ -1,6 +1,6 @@
 {
   "name": "@apollosolutions/example-graphos-custom-check-query-planner",
-  "repository": "https://github.com/apollosolutions/example-graphos-webhook-listener.git",
+  "repository": "https://github.com/apollosolutions/example-graphos-custom-check-query-planner.git",
   "license": "MIT",
   "private": true,
   "scripts": {
