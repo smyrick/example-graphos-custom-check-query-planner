@@ -1,5 +1,8 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { GraphOSRequest } from './_graphos-types';
+import * as crypto from 'crypto';
+
+const APOLLO_HMAC_SECRET = process.env['APOLLO_HMAC_TOKEN'];
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
@@ -9,13 +12,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     // Process the webhook payload
-    const payload = req.body; // Assuming the payload is in the request body
+    const payload = req.body || '{}';
 
     // Do something with the payload
     console.log("Webhook received:", payload);
 
+    // May throw an error
+    validateHmacSignature(req, payload);
+
     if (isGraphOSCustomCheckRequest(payload)) {
-      console.log("Received GraphOS custom check:", payload.eventID, payload.eventType);
+      console.log("Received GraphOS custom check:", payload.eventId, payload.eventType);
     }
 
     // Return a response (process custom check in background)
@@ -30,4 +36,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
 function isGraphOSCustomCheckRequest(payload: any): payload is GraphOSRequest {
   return payload.eventType === "APOLLO_CUSTOM_CHECK";
+}
+
+function validateHmacSignature(req: VercelRequest, payload: any) {
+  if (!APOLLO_HMAC_SECRET) {
+    throw new Error("HMAC secret not setup in environment");
+  }
+
+  // Include the webhook request in the calculated HMAC signature
+  const hmac = crypto.createHmac('sha256', APOLLO_HMAC_SECRET);
+  hmac.update(payload);
+
+  const providedSignature = req.headers['x-apollo-signature']?.[0];
+  const calculatedSignature = `sha256=${hmac.digest('hex')}`;
+
+  if (providedSignature !== calculatedSignature) {
+    throw new Error("Invalid HMAC signature");
+  }
 }

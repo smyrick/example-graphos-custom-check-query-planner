@@ -29,7 +29,7 @@ export interface SchemaInfo {
 
 export interface GraphOSRequest {
   eventType: 'APOLLO_CUSTOM_CHECK';
-  eventID: string;
+  eventId: string;
   version: string;
   checkStep: CheckStep;
   baseSchema: SchemaInfo;
