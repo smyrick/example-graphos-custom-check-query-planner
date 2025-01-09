@@ -2,7 +2,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { GraphOSRequest } from './_graphos-types';
 import * as crypto from 'crypto';
 
-const APOLLO_HMAC_SECRET = process.env['APOLLO_HMAC_TOKEN'];
+const APOLLO_HMAC_SECRET = process.env['APOLLO_HMAC_SECRET'];
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
