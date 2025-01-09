@@ -43,6 +43,8 @@ function validateHmacSignature(req: VercelRequest, payload: object) {
     throw new Error("HMAC secret not setup in environment");
   }
 
+  req.body()
+
   // Include the webhook request in the calculated HMAC signature
   const hmac = crypto.createHmac('sha256', APOLLO_HMAC_SECRET);
   hmac.update(JSON.stringify(payload));
@@ -51,6 +53,8 @@ function validateHmacSignature(req: VercelRequest, payload: object) {
   const calculatedSignature = `sha256=${hmac.digest('hex')}`;
 
   if (providedSignature !== calculatedSignature) {
+    console.log("Provided Signature", providedSignature);
+    console.log("Calculated Signature", calculatedSignature);
     throw new Error("Invalid HMAC signature");
   }
 }
