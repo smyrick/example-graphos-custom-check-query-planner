@@ -12,7 +12,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     // Process the webhook payload
-    const payload = req.body || '{}';
+    const payload = req.body || {};
 
     // Do something with the payload
     console.log("Webhook received:", payload);
@@ -38,14 +38,14 @@ function isGraphOSCustomCheckRequest(payload: any): payload is GraphOSRequest {
   return payload.eventType === "APOLLO_CUSTOM_CHECK";
 }
 
-function validateHmacSignature(req: VercelRequest, payload: any) {
+function validateHmacSignature(req: VercelRequest, payload: object) {
   if (!APOLLO_HMAC_SECRET) {
     throw new Error("HMAC secret not setup in environment");
   }
 
   // Include the webhook request in the calculated HMAC signature
   const hmac = crypto.createHmac('sha256', APOLLO_HMAC_SECRET);
-  hmac.update(payload);
+  hmac.update(JSON.stringify(payload));
 
   const providedSignature = req.headers['x-apollo-signature']?.[0];
   const calculatedSignature = `sha256=${hmac.digest('hex')}`;
