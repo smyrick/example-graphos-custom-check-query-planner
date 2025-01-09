@@ -1,23 +1,37 @@
 // This is a manual file copied from the GraphOS docs
-// https://www.apollographql.com/docs/graphos/platform/insights/notifications/build-status
+// https://www.apollographql.com/docs/graphos/platform/schema-management/checks/custom
 
-export interface BuildError {
-  message: string;
-  locations: ReadonlyArray<Location>;
+export interface GitContext {
+  branch?: string;
+  commit?: string;
+  committer?: string;
+  message?: string;
+  remoteUrl?: string;
 }
 
-export interface Location {
-  line: number;
-  column: number;
+export interface CheckStep {
+  graphId: string;
+  graphVariant: string;
+  taskId: string;
+  workflowId: string;
+  gitContext: GitContext;
 }
 
-export interface GraphOSResponse {
-  eventType: 'BUILD_PUBLISH_EVENT';
+export interface SubgraphInfo {
+  hash: string;
+  name: string;
+}
+
+export interface SchemaInfo {
+  hash: string;
+  subgraphs: SubgraphInfo[];
+}
+
+export interface GraphOSRequest {
+  eventType: 'APOLLO_CUSTOM_CHECK';
   eventID: string;
-  supergraphSchemaURL: string | undefined;
-  buildSucceeded: boolean;
-  buildErrors: BuildError[] | undefined;
-  graphID: string;
-  variantID: string;
-  timestamp: string;
+  version: string;
+  checkStep: CheckStep;
+  baseSchema: SchemaInfo;
+  proposedSchema: SchemaInfo;
 }

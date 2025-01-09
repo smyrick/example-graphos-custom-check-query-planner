@@ -1,6 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { GraphOSResponse } from './_graphos-types';
-import { Readable } from 'node:stream';
+import { GraphOSRequest } from './_graphos-types';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
@@ -15,19 +14,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // Do something with the payload
     console.log("Webhook received:", payload);
 
-    if (isGraphOSResponse(payload)) {
-      console.log("Received GraphOS response:", payload.eventID, payload.eventType)
-
-      if (payload.buildSucceeded !== true) {
-        res.status(400).json(payload);
-      }
-
-      const sdl = await fetch(payload.supergraphSchemaURL).then(res => res.text());
-      console.log("Supergraph file", sdl)
-      // Save stream buffer to external store here....
+    if (isGraphOSCustomCheckRequest(payload)) {
+      console.log("Received GraphOS custom check:", payload.eventID, payload.eventType);
     }
 
-    // Return a response (optional)
+    // Return a response (process custom check in background)
     res.status(200).json({ message: "Webhook received successfully!" });
   } catch (error) {
     console.error("Webhook error:", error);
@@ -37,6 +28,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 }
 
-function isGraphOSResponse(payload: any): payload is GraphOSResponse {
-  return payload.eventType === "BUILD_PUBLISH_EVENT";
+function isGraphOSCustomCheckRequest(payload: any): payload is GraphOSRequest {
+  return payload.eventType === "APOLLO_CUSTOM_CHECK";
 }
