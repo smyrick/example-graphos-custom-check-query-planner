@@ -45,14 +45,18 @@ function validateHmacSignature(req: VercelRequest, payload: object) {
 
   // Include the webhook request in the calculated HMAC signature
   const hmac = crypto.createHmac('sha256', APOLLO_HMAC_SECRET);
-  hmac.update(JSON.stringify(payload));
+  const stringPayload = JSON.stringify(payload);
+  console.log('String Payload:', stringPayload);
+  hmac.update(stringPayload);
 
-  const providedSignature = req.headers['x-apollo-signature']?.[0];
+  const sigHeader = req.headers['x-apollo-signature'] || [];
+  console.log('Header:', sigHeader);
+  const providedSignature = sigHeader[0];
   const calculatedSignature = `sha256=${hmac.digest('hex')}`;
 
   if (providedSignature !== calculatedSignature) {
-    console.log("Provided Signature", providedSignature);
-    console.log("Calculated Signature", calculatedSignature);
+    console.log("Provided Signature:", providedSignature);
+    console.log("Calculated Signature:", calculatedSignature);
     throw new Error("Invalid HMAC signature");
   }
 }
