@@ -13,6 +13,7 @@
 
 # Testing
 /coverage
+tests/real-event.json
 
 # Production
 build

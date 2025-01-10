@@ -1,8 +1,18 @@
-import { ApolloClient, gql, InMemoryCache } from '@apollo/client/core/core.cjs';
+import { Client, gql, fetchExchange } from "@urql/core";
 
-const graphOSClient = new ApolloClient({
-  uri: process.env['APOLLO_STUDIO_URL'] ??'https://api.apollographql.com/api/graphql',
-  cache: new InMemoryCache(),
+const graphOSClient = new Client({
+  url: 'https://api.apollographql.com/api/graphql',
+  exchanges: [fetchExchange],
+  fetchOptions: () => {
+    return {
+      headers: {
+        'Content-Type': 'application/json',
+        'apollographql-client-name': 'example-graphos-custom-check-query-planner',
+        'apollographql-client-version': '0.0.1',
+        'x-api-key': process.env['APOLLO_API_KEY'],
+      }
+    }
+  }    
 });
 
 const customCheckCallbackMutation = gql`
@@ -37,6 +47,16 @@ const customCheckCallbackMutation = gql`
   }
 `;
 
+const fetchOneSchemaQuery = gql`
+  query FetchOneSchema($graphId: ID!, $hash: SHA256) {
+    graph(id: $graphId) {
+      doc(hash: $hash) {
+        source
+      }
+    }
+  }
+`;
+
 const fetchSchemasQuery = gql`
   query FetchSchemas($graphId: ID!, $hashes: [SHA256!]!) {
     graph(id: $graphId) {
@@ -48,31 +68,20 @@ const fetchSchemasQuery = gql`
   }
 `;
 
-const CLIENT_HEADERS = {
-  'Content-Type': 'application/json',
-  'apollographql-client-name': 'example-graphos-custom-check-query-planner',
-  'apollographql-client-version': '0.0.1',
-  'x-api-key': process.env['APOLLO_API_KEY'],
+export const fetchOneSchema = async (graphId: string, hash: string) => {
+  return await graphOSClient
+    .query(fetchOneSchemaQuery, { graphId: graphId, hash: hash })
+    .toPromise()
+    .catch((err) => {
+      console.error(err);
+      return { data: { graph: null } };
+    });
 };
 
 export const fetchSchemas = async (graphId: string, hashes: string[]) => {
   return await graphOSClient
-    .query<{
-      graph: null | {
-        docs: null | Array<null | { hash: string; source: string }>;
-      };
-    }>({
-      query: fetchSchemasQuery,
-      variables: {
-        graphId: graphId,
-        hashes: hashes,
-      },
-      context: {
-        headers: {
-          ...CLIENT_HEADERS
-        },
-      },
-    })
+    .query(fetchSchemasQuery, { graphId: graphId, hashes: hashes })
+    .toPromise()
     .catch((err) => {
       console.error(err);
       return { data: { graph: null } };
@@ -90,9 +99,9 @@ export interface CustomCheckCallbackInput {
 }
 
 export const sendCustomCheckResponse = async (input: CustomCheckCallbackInput) => {
-  const callbackResult = await graphOSClient.mutate({
-    mutation: customCheckCallbackMutation,
-    variables: {
+  const callbackResult = await graphOSClient.mutation(
+    customCheckCallbackMutation,
+    {
       graphId: input.graphId,
       name: input.graphVariant,
       input: {
@@ -101,13 +110,7 @@ export const sendCustomCheckResponse = async (input: CustomCheckCallbackInput) =
         status: input.result,
         violations: [],
       },
-    },
-    context: {
-      headers: {
-        ...CLIENT_HEADERS
-      },
-    },
-  });
+    }).toPromise();
 
   console.log(
     JSON.stringify(`Callback results: ${JSON.stringify(callbackResult)}`),

@@ -4,12 +4,14 @@
   "license": "MIT",
   "private": true,
   "scripts": {
-    "vercel": "vercel dev"
+    "vercel": "vercel dev",
+    "build2": "tsc"
   },
   "dependencies": {
-    "@apollo/client": "^3.12.5",
     "@apollo/query-planner": "^2.9.3",
-    "@apollo/rover": "^0.26.3"
+    "@apollo/federation-internals": "^2.9.3",
+    "@urql/core": "^5.1.0",
+    "graphql": "^16.10.0"
   },
   "devDependencies": {
     "@vercel/node": "^5.0.1",
