@@ -1,4 +1,4 @@
-// This is a manual file copied from the GraphOS docs
+// This is a manual file created from the GraphOS docs
 // https://www.apollographql.com/docs/graphos/platform/schema-management/checks/custom
 
 export interface GitContext {
