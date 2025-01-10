@@ -1,9 +1,9 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node'
+import type { VercelRequest, VercelResponse } from '@vercel/node';
+import * as crypto from 'crypto';
 import { fetchOneSchema } from './_graphos-client';
 import { GraphOSRequest } from './_graphos-types';
-import * as crypto from 'crypto';
-import { promises as fs } from 'fs';
 import { getQueryPlans } from './_query-planner';
+import { OPERATIONS } from './_operations';
 
 const APOLLO_HMAC_SECRET = process.env['APOLLO_HMAC_SECRET'];
 
@@ -18,7 +18,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const payload = req.body || {};
 
     // Do something with the payload
-    console.log("Webhook received:", payload);
+    console.log("Webhook received:", JSON.stringify(payload));
 
     // Check secret signature, may throw an error
     //validateHmacSignature(req, payload);
@@ -31,12 +31,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       
       const proposedSupergraph = await fetchOneSchema(payload.checkStep.graphId, payload.proposedSchema.hash);
       const proposedSupergraphSdl = proposedSupergraph?.data?.graph?.doc?.source;
-
-      const operationList = JSON.parse(await fs.readFile(process.cwd() + "/api/_operations.json", "utf-8"));
-      const operations = operationList.operations.map(it => it.body);
       
-      const oldPlans = getQueryPlans(baseSupergraphSdl, operations);
-      const newPlans = getQueryPlans(proposedSupergraphSdl, operations);
+      const oldPlans = getQueryPlans(baseSupergraphSdl, OPERATIONS);
+      const newPlans = getQueryPlans(proposedSupergraphSdl, OPERATIONS);
 
       console.log(oldPlans);
     }
