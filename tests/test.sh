@@ -1,8 +1,14 @@
 #!/bin/bash
+set -e;
 
-cur_dir="$(dirname "$0")"
+cur_dir="$(dirname "$0")";
 
+source .env;
+
+# Use a tool with the text being the sample request and the secret the one
+# used in starting the app to calculate the header value
+# https://www.devglan.com/online-tools/hmac-sha256-online
 curl -X POST http://localhost:3000/api/webhook \
-    -H "x-apollo-signature: sha256=31802124e34f15288086db096fe82a1ddece6ace0dc968770fd507385e8e8ef4" \
+    -H "x-apollo-signature: sha256=$HMAC_HEADER_VALUE" \
     -H "Content-Type: application/json" \
     --data @$cur_dir/example-event.json

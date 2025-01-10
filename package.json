@@ -7,8 +7,9 @@
     "vercel": "vercel dev"
   },
   "dependencies": {
-    "@apollo/client": "^3.12.4",
-    "@apollo/query-planner": "^2.9.3"
+    "@apollo/client": "^3.12.5",
+    "@apollo/query-planner": "^2.9.3",
+    "@apollo/rover": "^0.26.3"
   },
   "devDependencies": {
     "@vercel/node": "^5.0.1",

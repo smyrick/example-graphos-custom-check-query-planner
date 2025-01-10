@@ -17,11 +17,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // Do something with the payload
     console.log("Webhook received:", payload);
 
-    // May throw an error
+    // Check secret signature, may throw an error
     validateHmacSignature(req, payload);
 
     if (isGraphOSCustomCheckRequest(payload)) {
       console.log("Received GraphOS custom check:", payload.eventId, payload.eventType);
+
+      //const baseSchemas = fetchSchemas(payload.checkStep.graphId)
     }
 
     // Return a response (process custom check in background)
@@ -45,16 +47,18 @@ function validateHmacSignature(req: VercelRequest, payload: object) {
 
   // Include the webhook request in the calculated HMAC signature
   const hmac = crypto.createHmac('sha256', APOLLO_HMAC_SECRET);
+
+  // To do HMAC you encode the request body text with the secret
   const stringPayload = JSON.stringify(payload);
-  console.log('String Payload:', stringPayload);
   hmac.update(stringPayload);
 
+  // Parsing Vercel headers does not return array if only 1 header value
   const providedSignature = req.headers['x-apollo-signature'] || '';
   const calculatedSignature = `sha256=${hmac.digest('hex')}`;
 
   if (providedSignature !== calculatedSignature) {
-    console.log("Provided Signature:", providedSignature);
-    console.log("Calculated Signature:", calculatedSignature);
     throw new Error("Invalid HMAC signature");
+  } else {
+    console.info('HMAC verified. Continuing with custom check.');
   }
 }
