@@ -49,9 +49,7 @@ function validateHmacSignature(req: VercelRequest, payload: object) {
   console.log('String Payload:', stringPayload);
   hmac.update(stringPayload);
 
-  const sigHeader = req.headers['x-apollo-signature'] || [];
-  console.log('Header:', sigHeader);
-  const providedSignature = sigHeader[0];
+  const providedSignature = req.headers['x-apollo-signature'] || '';
   const calculatedSignature = `sha256=${hmac.digest('hex')}`;
 
   if (providedSignature !== calculatedSignature) {
