@@ -12,8 +12,7 @@ export function comparePlans(baseSupergraph: string, proposedSupergraph: string,
     .map(it => parseOperation(proposedPlanner.supergraph.apiSchema(), it));
 
   if (baseOperations.length !== proposedOperations.length) {
-    console.error(`There was an operations mismatch between 
-      supergraphs, base: ${baseOperations.length}, proposed: ${proposedOperations.length}`);
+    console.error(`There was an operations mismatch between supergraphs, base: ${baseOperations.length}, proposed: ${proposedOperations.length}`);
     throw new Error('Difference in generating operations for supergraphs');
   }
 

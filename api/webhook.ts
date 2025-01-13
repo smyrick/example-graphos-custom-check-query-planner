@@ -83,7 +83,11 @@ async function processCheckInBackground(payload: GraphOSRequest) {
   const proposedSupergraph = await fetchOneSchema(graphId, payload.proposedSchema.hash);
   const proposedSupergraphSdl = proposedSupergraph?.data?.graph?.doc?.source;
 
+  console.info("Successfully fetched the supergraphs to check");
+
   const diffs = comparePlans(baseSupergraphSdl, proposedSupergraphSdl, OPERATIONS);
+
+  console.info("Generated diffs in query plans");
 
   let totalDiffs = 0;
   let violations: CustomCheckViolation[] = [];
@@ -142,4 +146,6 @@ async function processCheckInBackground(payload: GraphOSRequest) {
       violations
     }
   });
+
+  console.info(`Successfully updated GraphOS check with ${numErrors} violations errors`);
 }
