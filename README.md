@@ -2,6 +2,9 @@
 
 Example code that listens to a GraphOS custom check webhook to validate changes in query plans
 
+![Screenshot 2025-01-13 at 1 28 38 PM](https://github.com/user-attachments/assets/fec5a78e-502c-48bf-ba54-3fd458d4ed07)
+
+
 :warning:
 This code uses the internal package of the JS Query Planner. Apollo is actively moving to a new [Native Query Planner](https://www.apollographql.com/docs/graphos/routing/query-planning/native-query-planner) and this may have to be updated in the future to support new Federation features
 
