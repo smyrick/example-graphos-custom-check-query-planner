@@ -12,7 +12,7 @@ const graphOSClient = new Client({
         'x-api-key': process.env['APOLLO_API_KEY'],
       }
     }
-  }    
+  }
 });
 
 const customCheckCallbackMutation = gql`
@@ -88,14 +88,23 @@ export const fetchSchemas = async (graphId: string, hashes: string[]) => {
     });
 };
 
+export interface CustomCheckViolation {
+  level: 'ERROR' | 'WARNING' | 'INFO';
+  message: string;
+  rule: string;
+}
+
+export interface CustomCheckCallbackResultInput {
+  status: 'SUCCESS' | 'FAILURE';
+  violations: CustomCheckViolation[];
+}
+
 export interface CustomCheckCallbackInput {
   graphId: string;
   graphVariant: string;
-  result: {
-    taskId: string;
-    workflowId: string;
-    status: 'SUCCESS' | 'FAILURE';
-  }
+  taskId: string;
+  workflowId: string;
+  result: CustomCheckCallbackResultInput;
 }
 
 export const sendCustomCheckResponse = async (input: CustomCheckCallbackInput) => {
@@ -105,10 +114,10 @@ export const sendCustomCheckResponse = async (input: CustomCheckCallbackInput) =
       graphId: input.graphId,
       name: input.graphVariant,
       input: {
-        taskId: input.result.taskId,
-        workflowId: input.result.workflowId,
-        status: input.result,
-        violations: [],
+        taskId: input.taskId,
+        workflowId: input.workflowId,
+        status: input.result.status,
+        violations: input.result.violations,
       },
     }).toPromise();
 

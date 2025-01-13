@@ -1,9 +1,14 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import * as crypto from 'crypto';
-import { fetchOneSchema } from './_graphos-client';
+import {
+  CustomCheckViolation,
+  fetchOneSchema,
+  sendCustomCheckResponse
+} from './_graphos-client';
 import { GraphOSRequest } from './_graphos-types';
-import { getQueryPlans } from './_query-planner';
+import { comparePlans } from './_query-planner';
 import { OPERATIONS } from './_operations';
+import { CHECK_CONFIG_OPTIONS } from './_config-options';
 
 const APOLLO_HMAC_SECRET = process.env['APOLLO_HMAC_SECRET'];
 
@@ -21,25 +26,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     console.log("Webhook received:", JSON.stringify(payload));
 
     // Check secret signature, may throw an error
-    //validateHmacSignature(req, payload);
+    validateHmacSignature(req, payload);
 
     if (isGraphOSCustomCheckRequest(payload)) {
-      console.log("Received GraphOS custom check:", payload.eventId, payload.eventType);
+      // Fire off async process
+      // noinspection ES6MissingAwait
+      processCheckInBackground(payload);
 
-      const baseSupergraph = await fetchOneSchema(payload.checkStep.graphId, payload.baseSchema.hash);
-      const baseSupergraphSdl = baseSupergraph?.data?.graph?.doc?.source;
-      
-      const proposedSupergraph = await fetchOneSchema(payload.checkStep.graphId, payload.proposedSchema.hash);
-      const proposedSupergraphSdl = proposedSupergraph?.data?.graph?.doc?.source;
-      
-      const oldPlans = getQueryPlans(baseSupergraphSdl, OPERATIONS);
-      const newPlans = getQueryPlans(proposedSupergraphSdl, OPERATIONS);
-
-      console.log(oldPlans);
+      res.status(200).json({ message: "Webhook received successfully!" });
+    } else {
+      console.error("Invalid webhook request");
+      res
+        .status(400)
+        .json({ error: "The request was not a valid custom check request from GraphOS" });
     }
-
-    // Return a response (process custom check in background)
-    res.status(200).json({ message: "Webhook received successfully!" });
   } catch (error) {
     console.error("Webhook error:", error);
     res
@@ -73,4 +73,73 @@ function validateHmacSignature(req: VercelRequest, payload: object) {
   } else {
     console.info('HMAC verified. Continuing with custom check.');
   }
+}
+
+async function processCheckInBackground(payload: GraphOSRequest) {
+  const graphId = payload.checkStep.graphId;
+  const baseSupergraph = await fetchOneSchema(graphId, payload.baseSchema.hash);
+  const baseSupergraphSdl = baseSupergraph?.data?.graph?.doc?.source;
+
+  const proposedSupergraph = await fetchOneSchema(graphId, payload.proposedSchema.hash);
+  const proposedSupergraphSdl = proposedSupergraph?.data?.graph?.doc?.source;
+
+  const diffs = comparePlans(baseSupergraphSdl, proposedSupergraphSdl, OPERATIONS);
+
+  let totalDiffs = 0;
+  let violations: CustomCheckViolation[] = [];
+
+  diffs.forEach((diff, index) => {
+    totalDiffs += diff.numDifferences;
+
+    // Check the number of text plan differences
+    if (diff.numDifferences >= CHECK_CONFIG_OPTIONS.numberOfDifferences.error) {
+      violations.push({
+        level: 'ERROR',
+        rule: CHECK_CONFIG_OPTIONS.numberOfDifferences.ruleName,
+        message: `There were ${diff.numDifferences} differences for the custom check operation ${index}`
+      });
+    } else if (diff.numDifferences >= CHECK_CONFIG_OPTIONS.numberOfDifferences.warning) {
+      violations.push({
+        level: 'WARNING',
+        rule: CHECK_CONFIG_OPTIONS.numberOfDifferences.ruleName,
+        message: `There were ${diff.numDifferences} differences for the custom check operation ${index}`
+      });
+    }
+
+    // Check the time delta differences
+    if (Math.abs(diff.timeDifference) >= CHECK_CONFIG_OPTIONS.timeDelta.error) {
+      violations.push({
+        level: 'ERROR',
+        rule: CHECK_CONFIG_OPTIONS.timeDelta.ruleName,
+        message: `There was a time delta of ${diff.timeDifference} for the custom check operation ${index}`
+      });
+    } else if (Math.abs(diff.timeDifference) >= CHECK_CONFIG_OPTIONS.timeDelta.warning) {
+      violations.push({
+        level: 'WARNING',
+        rule: CHECK_CONFIG_OPTIONS.timeDelta.ruleName,
+        message: `There was a time delta of ${diff.timeDifference} for the custom check operation ${index}`
+      });
+    }
+  });
+
+  if (totalDiffs > 0) {
+    violations.push({
+      level: 'INFO',
+      rule: CHECK_CONFIG_OPTIONS.numberOfDifferences.ruleName,
+      message: `There were ${totalDiffs} total differences in query plans across all operations`
+    });
+  }
+
+  const numErrors = violations.filter(it => it.level === "ERROR").length;
+
+  await sendCustomCheckResponse({
+    graphId: payload.checkStep.graphId,
+    graphVariant: payload.checkStep.graphVariant,
+    taskId: payload.checkStep.taskId,
+    workflowId: payload.checkStep.workflowId,
+    result: {
+      status: numErrors > 0 ? 'FAILURE' : 'SUCCESS',
+      violations
+    }
+  });
 }
