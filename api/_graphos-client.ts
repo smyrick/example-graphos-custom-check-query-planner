@@ -108,7 +108,7 @@ export interface CustomCheckCallbackInput {
 }
 
 export const sendCustomCheckResponse = async (input: CustomCheckCallbackInput) => {
-  const callbackResult = await graphOSClient.mutation(
+  return graphOSClient.mutation(
     customCheckCallbackMutation,
     {
       graphId: input.graphId,
@@ -120,10 +120,4 @@ export const sendCustomCheckResponse = async (input: CustomCheckCallbackInput) =
         violations: input.result.violations,
       },
     }).toPromise();
-
-  console.log(
-    JSON.stringify(`Callback results: ${JSON.stringify(callbackResult)}`),
-  );
-
-  return;
 };

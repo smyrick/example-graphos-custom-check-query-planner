@@ -133,6 +133,8 @@ async function processCheckInBackground(payload: GraphOSRequest) {
   }
 
   const numErrors = violations.filter(it => it.level === "ERROR").length;
+  const numWarns = violations.filter(it => it.level === "WARNING").length;
+  const numInfo = violations.filter(it => it.level === "INFO").length;
 
   await sendCustomCheckResponse({
     graphId: payload.checkStep.graphId,
@@ -145,5 +147,5 @@ async function processCheckInBackground(payload: GraphOSRequest) {
     }
   });
 
-  console.info(`Successfully updated GraphOS check with ${numErrors} violations errors`);
+  console.info(`Successfully updated GraphOS check with ${numErrors} errors, ${numWarns} warnings, and ${numInfo} info violations`);
 }
