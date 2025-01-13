@@ -85,7 +85,11 @@ async function processCheck(payload: GraphOSRequest) {
 
   console.info("Successfully fetched the supergraphs to check");
 
-  const diffs = comparePlans(baseSupergraphSdl, proposedSupergraphSdl, OPERATIONS);
+  const diffs = comparePlans(
+    baseSupergraphSdl,
+    proposedSupergraphSdl,
+    OPERATIONS.map(it => it.body)
+  );
 
   console.info("Generated diffs in query plans");
 
@@ -100,13 +104,13 @@ async function processCheck(payload: GraphOSRequest) {
       violations.push({
         level: 'ERROR',
         rule: CHECK_CONFIG_OPTIONS.numberOfDifferences.ruleName,
-        message: `There were ${diff.numDifferences} differences for the custom check operation ${index}`
+        message: `There were ${diff.numDifferences} differences for the custom check operation ${OPERATIONS[index].name}. Differences: ${JSON.stringify(diff.diffsPerLine)}`
       });
     } else if (diff.numDifferences >= CHECK_CONFIG_OPTIONS.numberOfDifferences.warning) {
       violations.push({
         level: 'WARNING',
         rule: CHECK_CONFIG_OPTIONS.numberOfDifferences.ruleName,
-        message: `There were ${diff.numDifferences} differences for the custom check operation ${index}`
+        message: `There were ${diff.numDifferences} differences for the custom check operation ${OPERATIONS[index].name}. Differences: ${JSON.stringify(diff.diffsPerLine)}`
       });
     }
 
@@ -115,13 +119,13 @@ async function processCheck(payload: GraphOSRequest) {
       violations.push({
         level: 'ERROR',
         rule: CHECK_CONFIG_OPTIONS.timeDelta.ruleName,
-        message: `There was a time delta of ${diff.timeDifference} for the custom check operation ${index}`
+        message: `There was a time delta of ${diff.timeDifference} for the custom check operation ${OPERATIONS[index].name}.`
       });
     } else if (Math.abs(diff.timeDifference) >= CHECK_CONFIG_OPTIONS.timeDelta.warning) {
       violations.push({
         level: 'WARNING',
         rule: CHECK_CONFIG_OPTIONS.timeDelta.ruleName,
-        message: `There was a time delta of ${diff.timeDifference} for the custom check operation ${index}`
+        message: `There was a time delta of ${diff.timeDifference} for the custom check operation ${OPERATIONS[index].name}.`
       });
     }
   });
