@@ -29,9 +29,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     validateHmacSignature(req, payload);
 
     if (isGraphOSCustomCheckRequest(payload)) {
-      // Fire off async process
-      // noinspection ES6MissingAwait
-      processCheckInBackground(payload);
+      await processCheckInBackground(payload);
 
       res.status(200).json({ message: "Webhook received successfully!" });
     } else {
