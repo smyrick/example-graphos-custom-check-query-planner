@@ -21,17 +21,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     // Process the webhook payload
     const payload = req.body || {};
-
-    // Do something with the payload
     console.log("Webhook received:", JSON.stringify(payload));
 
     // Check secret signature, may throw an error
     validateHmacSignature(req, payload);
 
     if (isGraphOSCustomCheckRequest(payload)) {
-      await processCheckInBackground(payload);
+      await processCheck(payload);
 
-      res.status(200).json({ message: "Webhook received successfully!" });
+      res.status(200).json({ message: "Webhook processed successfully!" });
     } else {
       console.error("Invalid webhook request");
       res
@@ -73,13 +71,17 @@ function validateHmacSignature(req: VercelRequest, payload: object) {
   }
 }
 
-async function processCheckInBackground(payload: GraphOSRequest) {
+async function processCheck(payload: GraphOSRequest) {
   const graphId = payload.checkStep.graphId;
   const baseSupergraph = await fetchOneSchema(graphId, payload.baseSchema.hash);
   const baseSupergraphSdl = baseSupergraph?.data?.graph?.doc?.source;
 
   const proposedSupergraph = await fetchOneSchema(graphId, payload.proposedSchema.hash);
   const proposedSupergraphSdl = proposedSupergraph?.data?.graph?.doc?.source;
+
+  if (!baseSupergraphSdl || !proposedSupergraphSdl) {
+    throw new Error("Failed to fetch valid supergraphs for the custom check");
+  }
 
   console.info("Successfully fetched the supergraphs to check");
 
