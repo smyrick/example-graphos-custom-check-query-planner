@@ -1,5 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import * as crypto from 'crypto';
+import { execSync } from 'child_process';
 import {
   CustomCheckViolation,
   fetchOneSchema,
@@ -154,4 +155,12 @@ async function processCheck(payload: GraphOSRequest) {
   });
 
   console.info(`Successfully updated GraphOS check with ${numErrors} errors, ${numWarns} warnings, and ${numInfo} info violations`);
+}
+
+// Example of how we could call the Rover CLI from this code in the future
+// once Rover has an option to generate query plans.
+// Also see in package.json how we include the rover binary in the Node /bin
+function callRover() {
+  const result = execSync('rover --version');
+  console.log(result.toString());
 }
