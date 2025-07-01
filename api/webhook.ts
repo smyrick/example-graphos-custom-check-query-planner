@@ -22,8 +22,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     // TODO: Delete me
     // Throw error to debug request details
-    const requestJson = JSON.stringify(req);
-    console.error(requestJson);
+    const requestHeaders = JSON.stringify(req.headers);
+    console.error(requestHeaders);
+    const requestHost = JSON.stringify(req.host);
+    console.error(requestHost);
     return;
 
     // Process the webhook payload
