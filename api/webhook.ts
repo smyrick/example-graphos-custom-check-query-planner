@@ -19,15 +19,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       res.status(405).json({ error: "Method Not Allowed" });
       return;
     }
-
-    // TODO: Delete me
-    // Throw error to debug request details
-    const requestHeaders = JSON.stringify(req.headers);
-    console.error(requestHeaders);
-    const requestHost = JSON.stringify(req.host);
-    console.error(requestHost);
-    return;
-
+    
     // Process the webhook payload
     const payload = req.body || {};
     console.log("Webhook received:", JSON.stringify(payload));
