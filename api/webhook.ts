@@ -22,7 +22,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     // TODO: Delete me
     // Throw error to debug request details
-    res.status(400).json({
+    res.status(500).json({
       host: req.host,
       headers: req.headers
     });
